@@ -20,7 +20,7 @@ def main():
         ap.add_argument('--passwd', help='tor control authenticate password', default=None, required=False)
         ap.add_argument('--host', help='tor control host ip', default='127.0.0.1', required=False)
         ap.add_argument('--port', help='tor control host port', default='9051', required=False)
-        ap.add_argument('--timer', help='switch timer', default=120, type=int, required=False)
+        ap.add_argument('--timer', help='switch timer', default=60, type=int, required=False)
         args = ap.parse_args()
         if args.passwd == None:
             showBanner()
@@ -50,47 +50,37 @@ def main():
     cleanScreen()
     showBanner()
     while True:
-        try:
+        try:    
             tn.write('SIGNAL NEWNYM\r\n')
-            res = tn.read_until('250 OK', 5)
-            if res.find('250 OK') > -1:
+            tn.read_until('250 OK', 5)
+            for x in range(clock):
                 tn.write('GETINFO circuit-status\r\n')
                 res = tn.read_until('250 OK',5)
                 print '             HOST\n              |\n              V'
-                if res.find('250 OK') > -1:
-                    regex = re.compile('\$')
-                    s = re.finditer(regex, res)
-                    i = 0
-                    for match in s:
-                        id = res[match.end():match.end()+40]
-                        tn.write('GETINFO ns/id/%s\r\n' % id)
-                        txt = tn.read_until('250 OK', 5)
-                        list = re.split('\s+', txt)
-                        tn.write('GETINFO ip-to-country/%s\r\n' % list[8])
-                        country = tn.read_until('250 OK', 5)
-                        country = country[-10:-8]
-                        print('   IP:%s[%s] NAME:%s' % (list[8], country.upper(), list[3]))
-                        if i<2:
-                            i = i+1
-                            print('              |')
-                            print('              V')
-                        else:
-                            print('\n')
-                            break
-                else:
-                    print('CIRCUIT-STATUS ERROR!')
-                    sys.exit(1)
-                old = datetime.datetime.now()
-                print('[*] [%02d:%02d:%02d]' % (old.hour, old.minute, old.second))
-            else: 
-                print('[!] NEWYM ERROR!')
-            for x in range(clock):
-                time.sleep(1)
+                regex = re.compile('\$')
+                s = re.finditer(regex, res)
+                i = 0
+                for match in s:
+                    id = res[match.end():match.end()+40]
+                    tn.write('GETINFO ns/id/%s\r\n' % id)
+                    txt = tn.read_until('250 OK', 5)
+                    list = re.split('\s+', txt)
+                    tn.write('GETINFO ip-to-country/%s\r\n' % list[8])
+                    country = tn.read_until('250 OK', 5)
+                    country = country[-10:-8]
+                    print('   IP:%s[%s] NAME:%s' % (list[8], country.upper(), list[3]))
+                    if i<2:
+                        i = i+1
+                        print('              |')
+                        print('              V')
+                    else:
+                        print('\n')
+                        break
                 now = datetime.datetime.now()
                 print('[!] [%02d:%02d:%02d] [%d/%d]' % (now.hour, now.minute, now.second, x, clock))
-                sys.stdout.write('\033[F')
-            cleanScreen()
-            showBanner()
+                time.sleep(1)
+                cleanScreen()
+                showBanner()
         except (KeyboardInterrupt, SystemExit):
             try:
                 tn.write("[!] QUIT\r\n")

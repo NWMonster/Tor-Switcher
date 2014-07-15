@@ -15,22 +15,22 @@ def cleanScreen():
     os.system(['clear', 'cls'][os.name == 'nt'])
 
 def main():
-    host = '127.0.0.1'
-    port = '9051'
-    clock = 60
-    ap = argparse.ArgumentParser(description='Tor Switcher v0.1')
-    ap.add_argument('--passwd', help='tor control authenticate password', default=None, required=False)
-    ap.add_argument('--host', help='tor control host ip', default='127.0.0.1', required=False)
-    ap.add_argument('--port', help='tor control host port', default='9051', required=False)
-    ap.add_argument('--timer', help='switch timer', default=60, type=int, required=False)
-    args = ap.parse_args()
-    if args.passwd == None:
-        showBanner()
-        print('[!] Tor Control Authenticate')
-        passwd = getpass.getpass(prompt='[?] Password:')
-    else:
-        passwd = args.passwd
     try:
+        ap = argparse.ArgumentParser(description='Tor Switcher v0.1')
+        ap.add_argument('--passwd', help='tor control authenticate password', default=None, required=False)
+        ap.add_argument('--host', help='tor control host ip', default='127.0.0.1', required=False)
+        ap.add_argument('--port', help='tor control host port', default='9051', required=False)
+        ap.add_argument('--timer', help='switch timer', default=120, type=int, required=False)
+        args = ap.parse_args()
+        if args.passwd == None:
+            showBanner()
+            print('[!] Tor Control Authenticate')
+            passwd = getpass.getpass(prompt='[?] Password:')
+        else:
+            passwd = args.passwd
+        clock = args.timer
+        host = args.host
+        port = args.port   
         tn = telnetlib.Telnet(host, port)
         if passwd == '':
             tn.write('AUTHENTICATE\r\n')
@@ -43,11 +43,10 @@ def main():
         else:
             print('[!] AUTHENTICATE ERROR\n')
             print('[!] EXIT')
-            sys.exit(1)
+            return
     except Exception, ex:
         print('[!] ERROR: %s.' % (ex))
         print('[!] EXIT')
-        sys.exit(1)
     cleanScreen()
     showBanner()
     while True:
@@ -85,11 +84,10 @@ def main():
                 print('[*] [%02d:%02d:%02d]' % (old.hour, old.minute, old.second))
             else: 
                 print('[!] NEWYM ERROR!')
-                sys.exit(1)
             for x in range(clock):
                 time.sleep(1)
                 now = datetime.datetime.now()
-                print('[*] [%02d:%02d:%02d] [%d/%d]' % (now.hour, now.minute, now.second, x, clock))
+                print('[!] [%02d:%02d:%02d] [%d/%d]' % (now.hour, now.minute, now.second, x, clock))
                 sys.stdout.write('\033[F')
             cleanScreen()
             showBanner()
